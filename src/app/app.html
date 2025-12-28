@@ -1,0 +1,43 @@
+<app-toast></app-toast>
+<app-header></app-header>
+
+<main>
+  <router-outlet></router-outlet>
+</main>
+
+<footer>
+  <div class="footer-content">
+    <div class="socials-premium">
+      <a [href]="socialLinks().instagram || 'https://instagram.com'" target="_blank" class="ig-link"
+        >INSTAGRAM</a
+      >
+      <a [href]="socialLinks().facebook || 'https://facebook.com'" target="_blank" class="fb-link"
+        >FACEBOOK</a
+      >
+      @if (socialLinks().whatsapp) {
+      <a [href]="'https://wa.me/' + socialLinks().whatsapp" target="_blank" class="wa-link"
+        >WHATSAPP: {{ socialLinks().whatsapp }}</a
+      >
+      } @else {
+      <a href="https://wa.me/your-number" target="_blank" class="wa-link">WHATSAPP</a>
+      }
+    </div>
+
+    <div class="footer-bottom">
+      <p class="copyright-trigger" (click)="toggleLogin($event)">SECTOR REMERAS &copy; 2025</p>
+      <div class="brand-credits">
+        <span>Developed by</span>
+        <a href="#" class="fds-brand">fdsSoftware</a>
+      </div>
+    </div>
+  </div>
+</footer>
+
+@if (showLogin()) {
+<div class="modal-overlay" (click)="toggleLogin($event)">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <app-login (loginSuccess)="showLogin.set(false)" />
+    <button class="close-modal" (click)="toggleLogin($event)">&times;</button>
+  </div>
+</div>
+}
