@@ -98,7 +98,7 @@ import { CurrencyPipe } from '@angular/common';
   styles: [
     `
       .detail-page {
-        padding: 10rem 2rem 5rem;
+        padding: 15rem 2rem 5rem;
         min-height: 100vh;
       }
 

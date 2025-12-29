@@ -166,6 +166,21 @@ import { UiService } from '../../../core/services/ui.service';
         margin-bottom: 1.2rem;
       }
 
+      .current-img {
+        margin-bottom: 1rem;
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+      }
+
+      .current-img img {
+        max-height: 200px;
+        width: auto;
+        border-radius: 12px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        object-fit: contain;
+      }
+
       label {
         display: block;
         margin-bottom: 0.4rem;
