@@ -11,11 +11,14 @@ import {
   deleteDoc,
   setDoc,
   updateDoc,
+  onSnapshot,
 } from '@angular/fire/firestore';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { Observable, of } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
 import { UiService } from './ui.service';
+import { PLATFORM_ID } from '@angular/core';
+import { isPlatformBrowser } from '@angular/common';
 import { MOCK_PRODUCTS, MOCK_WORKS } from '../data/mock-products';
 
 export interface Product {
@@ -37,61 +40,80 @@ export interface Product {
 export class ProductService {
   private firestore = inject(Firestore);
   private ui = inject(UiService);
+  private platformId = inject(PLATFORM_ID);
+
+  constructor() {
+    if (isPlatformBrowser(this.platformId)) {
+      console.log('ProductService: Browser Initialized');
+    }
+  }
 
   // --- SIGNALS WITH SMART FALLBACK ---
 
-  // Products: If Firestore collection is empty, returns mocks
+  // Products
   products = toSignal(
-    (
-      collectionData(query(collection(this.firestore, 'products'), orderBy('createdAt', 'desc')), {
-        idField: 'id',
-      }) as Observable<Product[]>
-    ).pipe(
-      map((data) => (data.length > 0 ? data : MOCK_PRODUCTS)),
-      catchError(() => of(MOCK_PRODUCTS))
-    ),
+    new Observable<Product[]>((observer) => {
+      return onSnapshot(
+        collection(this.firestore, 'products'),
+        (snapshot) => {
+          const data = snapshot.docs.map((d) => ({ id: d.id, ...d.data() } as Product));
+          if (isPlatformBrowser(this.platformId)) {
+            console.log('ProductService: Productos en navegador:', data.length);
+          }
+          // Only use mocks if actually EMPTY and we want to show something
+          observer.next(data.length > 0 ? data : MOCK_PRODUCTS);
+        },
+        (err) => {
+          console.error('ProductService: Error en productos:', err);
+          observer.next(MOCK_PRODUCTS);
+        }
+      );
+    }),
     { initialValue: MOCK_PRODUCTS }
   );
 
-  // Collage Works: If Firestore collection is empty, returns mocks
+  // Collage Works
   works = toSignal(
-    (
-      collectionData(query(collection(this.firestore, 'works'), orderBy('createdAt', 'desc')), {
-        idField: 'id',
-      }) as Observable<any[]>
-    ).pipe(
-      map((data) => (data.length > 0 ? data : MOCK_WORKS)),
-      catchError(() => of(MOCK_WORKS))
-    ),
+    new Observable<any[]>((observer) => {
+      return onSnapshot(
+        collection(this.firestore, 'works'),
+        (snapshot) => {
+          const data = snapshot.docs.map((d) => ({ id: d.id, ...d.data() }));
+          if (isPlatformBrowser(this.platformId)) {
+            console.log('ProductService: Obras en navegador:', data.length);
+          }
+          observer.next(data.length > 0 ? data : []);
+        },
+        (err) => {
+          console.error('ProductService: Error en obras:', err);
+          observer.next(MOCK_WORKS);
+        }
+      );
+    }),
     { initialValue: MOCK_WORKS }
   );
 
-  // Categories: Defaults if empty
+  // Categories
   categories = toSignal(
-    (
-      collectionData(query(collection(this.firestore, 'categories'), orderBy('name', 'asc')), {
-        idField: 'id',
-      }) as Observable<any[]>
-    ).pipe(
-      map((data) =>
-        data.length > 0
-          ? data
-          : [
-              { id: '1', name: 'Remeras' },
-              { id: '2', name: 'Camperas' },
-              { id: '3', name: 'Pantalones' },
-              { id: '4', name: 'Accesorios' },
-            ]
-      ),
-      catchError(() =>
-        of([
-          { id: '1', name: 'Remeras' },
-          { id: '2', name: 'Camperas' },
-          { id: '3', name: 'Pantalones' },
-          { id: '4', name: 'Accesorios' },
-        ])
-      )
-    ),
+    new Observable<any[]>((observer) => {
+      const defaults = [
+        { id: '1', name: 'Remeras' },
+        { id: '2', name: 'Camperas' },
+        { id: '3', name: 'Pantalones' },
+        { id: '4', name: 'Accesorios' },
+      ];
+      return onSnapshot(
+        collection(this.firestore, 'categories'),
+        (snapshot) => {
+          const data = snapshot.docs.map((d) => ({ id: d.id, ...d.data() }));
+          observer.next(data.length > 0 ? data : defaults);
+        },
+        (err) => {
+          console.error('ProductService: Error en categorías:', err);
+          observer.next(defaults);
+        }
+      );
+    }),
     {
       initialValue: [
         { id: '1', name: 'Remeras' },
@@ -192,14 +214,17 @@ export class ProductService {
 
   // --- COLLAGE / WORKS ---
   async addWork(data: any) {
+    console.log('ProductService: Intentando agregar obra:', data);
     try {
       const res = await addDoc(collection(this.firestore, 'works'), {
         ...data,
         createdAt: new Date(),
       });
+      console.log('ProductService: Obra agregada con ID:', res.id);
       this.ui.showToast('Imagen subida al collage');
       return res;
     } catch (e) {
+      console.error('ProductService: Error en addWork:', e);
       this.ui.showToast('Error al subir imagen', 'error');
       throw e;
     }
