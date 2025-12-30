@@ -18,7 +18,6 @@ import { Observable, of } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
 import { UiService } from './ui.service';
 import { PLATFORM_ID } from '@angular/core';
-import { isPlatformBrowser } from '@angular/common';
 import { MOCK_PRODUCTS, MOCK_WORKS } from '../data/mock-products';
 
 export interface Product {
@@ -42,25 +41,17 @@ export class ProductService {
   private ui = inject(UiService);
   private platformId = inject(PLATFORM_ID);
 
-  constructor() {
-    if (isPlatformBrowser(this.platformId)) {
-      console.log('ProductService: Browser Initialized');
-    }
-  }
+  constructor() {}
 
   // --- SIGNALS WITH SMART FALLBACK ---
 
   // Products
   products = toSignal(
     new Observable<Product[]>((observer) => {
-      return onSnapshot(
+      const unsub = onSnapshot(
         collection(this.firestore, 'products'),
         (snapshot) => {
           const data = snapshot.docs.map((d) => ({ id: d.id, ...d.data() } as Product));
-          if (isPlatformBrowser(this.platformId)) {
-            console.log('ProductService: Productos en navegador:', data.length);
-          }
-          // Only use mocks if actually EMPTY and we want to show something
           observer.next(data.length > 0 ? data : MOCK_PRODUCTS);
         },
         (err) => {
@@ -68,6 +59,7 @@ export class ProductService {
           observer.next(MOCK_PRODUCTS);
         }
       );
+      return () => unsub();
     }),
     { initialValue: MOCK_PRODUCTS }
   );
@@ -75,20 +67,18 @@ export class ProductService {
   // Collage Works
   works = toSignal(
     new Observable<any[]>((observer) => {
-      return onSnapshot(
+      const unsub = onSnapshot(
         collection(this.firestore, 'works'),
         (snapshot) => {
           const data = snapshot.docs.map((d) => ({ id: d.id, ...d.data() }));
-          if (isPlatformBrowser(this.platformId)) {
-            console.log('ProductService: Obras en navegador:', data.length);
-          }
-          observer.next(data.length > 0 ? data : []);
+          observer.next(data.length > 0 ? data : MOCK_WORKS);
         },
         (err) => {
-          console.error('ProductService: Error en obras:', err);
+          console.error('ProductService: Error crítico en obras:', err);
           observer.next(MOCK_WORKS);
         }
       );
+      return () => unsub();
     }),
     { initialValue: MOCK_WORKS }
   );

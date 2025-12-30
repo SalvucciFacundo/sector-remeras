@@ -171,7 +171,11 @@ export class AdminCategoriesComponent {
   }
 
   async deleteCategory(id: string) {
-    if (!confirm('¿Seguro que quieres borrar esta categoría?')) return;
+    const confirmed = await this.ui.confirm(
+      '¿Borrar Categoría?',
+      'Se eliminará esta categoría del sistema. Ten en cuenta que los productos que ya la usen podrían quedar mal clasificados.'
+    );
+    if (!confirmed) return;
     try {
       await this.productService.deleteCategory(id);
     } catch (error) {

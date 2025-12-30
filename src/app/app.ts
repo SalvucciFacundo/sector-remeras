@@ -5,10 +5,11 @@ import { LoginComponent } from './features/login/login.component';
 import { ProductService } from './core/services/product.service';
 import { ToastComponent } from './core/components/toast/toast.component';
 import { UiService } from './core/services/ui.service';
+import { ConfirmModalComponent } from './shared/components/confirm-modal.component';
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet, HeaderComponent, LoginComponent, ToastComponent],
+  imports: [RouterOutlet, HeaderComponent, LoginComponent, ToastComponent, ConfirmModalComponent],
   templateUrl: './app.html',
   styleUrl: './app.scss',
 })

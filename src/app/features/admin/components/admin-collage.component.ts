@@ -162,7 +162,11 @@ export class AdminCollageComponent {
   works = this.productService.works;
 
   async deleteWork(id: string) {
-    if (!confirm('¿Eliminar este trabajo del collage?')) return;
+    const confirmed = await this.ui.confirm(
+      '¿Eliminar Obra?',
+      '¿Estás seguro de que quieres quitar esta imagen del collage del home?'
+    );
+    if (!confirmed) return;
     try {
       await this.productService.deleteWork(id);
     } catch (error) {

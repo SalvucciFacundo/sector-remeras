@@ -432,7 +432,11 @@ export class AdminProductsComponent {
   }
 
   async deleteProduct(id: string) {
-    if (!confirm('¿Seguro que quieres borrar este producto?')) return;
+    const confirmed = await this.ui.confirm(
+      '¿Borrar Producto?',
+      'Esta acción no se puede deshacer. El diseño desaparecerá del catálogo definitivamente.'
+    );
+    if (!confirmed) return;
     try {
       await this.productService.deleteProduct(id);
       if (this.editingId() === id) this.cancelEdit();
